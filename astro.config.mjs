@@ -2,9 +2,40 @@
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 
+// Turn ```mermaid fences into <pre class="mermaid"> (raw HTML) so they bypass the syntax highlighter
+// and mermaid.js can render them client-side. Hand-rolled walk to avoid a unist-util-visit dep.
+function remarkMermaid() {
+  const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const walk = (node) => {
+    if (!node || !Array.isArray(node.children)) return;
+    for (const child of node.children) {
+      if (child.type === 'code' && child.lang === 'mermaid') {
+        child.type = 'html';
+        child.value = `<pre class="mermaid">${esc(child.value)}</pre>`;
+        delete child.lang;
+      } else {
+        walk(child);
+      }
+    }
+  };
+  return (tree) => walk(tree);
+}
+
+// Lazily render any mermaid diagrams on the page (only loads mermaid.js when one is present).
+const MERMAID_SCRIPT = `
+  const nodes = document.querySelectorAll('pre.mermaid');
+  if (nodes.length) {
+    const { default: mermaid } = await import('https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs');
+    const dark = document.documentElement.dataset.theme === 'dark';
+    mermaid.initialize({ startOnLoad: false, theme: dark ? 'dark' : 'default', fontFamily: 'inherit' });
+    await mermaid.run({ nodes });
+  }
+`;
+
 // https://astro.build/config
 export default defineConfig({
   site: 'https://tharikey.com',
+  markdown: { remarkPlugins: [remarkMermaid] },
   integrations: [
     // Docs are an isolated portal reached via the /developers landing — they use Starlight's own
     // header (no marketing-nav injection); we only share the theme + fonts for visual cohesion.
@@ -31,6 +62,8 @@ export default defineConfig({
             href: 'https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..600&family=Hanken+Grotesk:wght@400..700&display=swap',
           },
         },
+        // Render mermaid diagrams (lazy — only fetches mermaid.js on pages that have one).
+        { tag: 'script', attrs: { type: 'module' }, content: MERMAID_SCRIPT },
       ],
       social: [
         { icon: 'github', label: 'GitHub', href: 'https://github.com/tharikey' },

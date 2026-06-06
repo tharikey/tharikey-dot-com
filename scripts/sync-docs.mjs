@@ -32,6 +32,25 @@ const root = new URL('..', import.meta.url).pathname;
 // Content nests one level deep so URLs carry the /docs prefix (Starlight 0.39 has no routeBasePath).
 const docsRoot = join(root, 'src', 'content', 'docs', 'docs');
 
+// Synced docs are plain markdown (mkdocs-style — title from the h1). Starlight requires a `title` in
+// frontmatter, so derive it from the first heading (and drop that heading so it isn't duplicated).
+async function addFrontmatter(dir) {
+  for (const e of await readdir(dir, { withFileTypes: true })) {
+    const p = join(dir, e.name);
+    if (e.isDirectory()) {
+      await addFrontmatter(p);
+      continue;
+    }
+    if (!e.name.endsWith('.md')) continue;
+    let text = await readFile(p, 'utf8');
+    if (text.startsWith('---')) continue; // already has frontmatter
+    const m = text.match(/^\s*#\s+(.+?)\s*$/m);
+    const title = (m ? m[1] : e.name.replace(/\.md$/, '')).replace(/`/g, '').replace(/"/g, '\\"');
+    if (m) text = (text.slice(0, m.index) + text.slice(m.index + m[0].length)).replace(/^\s+/, '');
+    await writeFile(p, `---\ntitle: "${title}"\n---\n\n${text}`);
+  }
+}
+
 async function syncOne({ repo, section }) {
   const work = join(tmpdir(), `tharikey-docs-${repo}`);
   await rm(work, { recursive: true, force: true });
@@ -48,6 +67,7 @@ async function syncOne({ repo, section }) {
   await rm(dest, { recursive: true, force: true });
   await mkdir(dest, { recursive: true });
   await cp(srcDocs, dest, { recursive: true });
+  await addFrontmatter(dest);
   const files = (await readdir(dest)).length;
   console.log(`✓ ${repo} → docs/${section} (${files} entries)`);
 }
