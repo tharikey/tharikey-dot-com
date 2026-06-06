@@ -19,6 +19,7 @@ export const acknowledgements: Acknowledgement[] = [
   // Data & references
   { name: 'dhivehi-transliteration (politecat)', url: 'https://github.com/politecat314/dhivehi-transliteration', note: 'Dhivehi transliteration dataset.' },
   { name: 'alakxender', url: 'https://huggingface.co/alakxender', note: 'Dhivehi transliteration pairs dataset.' },
+  { name: 'Common Voice Utils', url: 'https://github.com/ftyers/commonvoice-utils', note: 'Language tooling — alphabets and phonology, incl. Dhivehi.' },
   { name: 'ISO 15919', url: 'https://www.iso.org/standard/28333.html', note: 'Romanization standard reference.' },
   { name: 'Omniglot', url: 'https://www.omniglot.com/writing/thaana.htm', note: 'Thaana script reference.' },
   { name: 'That Maldives Blog', url: 'https://thatmaldivesblog.com', note: 'Background and reference on Dhivehi and Thaana.' },
