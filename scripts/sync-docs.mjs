@@ -12,7 +12,7 @@
  *
  * Env: GITHUB_TOKEN (optional, raises rate limits).
  */
-import { mkdir, rm, cp, readdir } from 'node:fs/promises';
+import { mkdir, rm, cp, readdir, readFile, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -56,7 +56,7 @@ for (const s of SOURCES) {
   try {
     await syncOne(s);
   } catch (e) {
-    console.error(`✗ ${s.repo}: ${e.message}`);
-    process.exitCode = 1;
+    // A repo that isn't public yet (e.g. macos) just keeps its placeholder — don't fail the build.
+    console.warn(`! skipped ${s.repo} (${e.message.split('\n')[0]}) — keeping placeholder`);
   }
 }
