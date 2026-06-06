@@ -32,51 +32,9 @@ const root = new URL('..', import.meta.url).pathname;
 // Content nests one level deep so URLs carry the /docs prefix (Starlight 0.39 has no routeBasePath).
 const docsRoot = join(root, 'src', 'content', 'docs', 'docs');
 
-// Convert mkdocs-material syntax to Starlight equivalents (the engine docs use it):
-//   !!! type "Title"  → :::aside[Title]   (note/tip/caution/danger)
-//   ??? type "Title"  → <details>          (collapsible)
-//   === "Tab"         → **Tab** + content  (Starlight tabs need MDX; degrade to labeled sections)
-// (Mermaid is handled separately by a remark plugin at build time.)
-function mkdocsToStarlight(text) {
-  const ASIDE = {
-    note: 'note', info: 'note', abstract: 'note', question: 'note', quote: 'note', example: 'note',
-    tip: 'tip', hint: 'tip', success: 'tip',
-    warning: 'caution', caution: 'caution', attention: 'caution',
-    danger: 'danger', error: 'danger', bug: 'danger', failure: 'danger',
-  };
-  const lines = text.split('\n');
-  const out = [];
-  for (let i = 0; i < lines.length; i++) {
-    const adm = lines[i].match(/^(!!!|\?\?\?)\s+(\w+)(?:\s+"([^"]*)")?\s*$/);
-    const tab = lines[i].match(/^===\s+"([^"]*)"\s*$/);
-    if (!adm && !tab) {
-      out.push(lines[i]);
-      continue;
-    }
-    // gather the indented block that follows, dedented one level
-    const block = [];
-    let j = i + 1;
-    for (; j < lines.length; j++) {
-      if (lines[j].trim() === '') { block.push(''); continue; }
-      if (/^( {4}|\t)/.test(lines[j])) { block.push(lines[j].replace(/^( {4}|\t)/, '')); continue; }
-      break;
-    }
-    while (block.length && block[block.length - 1] === '') block.pop();
-    if (tab) {
-      out.push(`**${tab[1]}**`, '', ...block, '');
-    } else if (adm[1] === '???') {
-      out.push('<details>', `<summary>${adm[3] || adm[2]}</summary>`, '', ...block, '', '</details>', '');
-    } else {
-      const kind = ASIDE[adm[2].toLowerCase()] || 'note';
-      out.push(adm[3] ? `:::${kind}[${adm[3]}]` : `:::${kind}`, ...block, ':::', '');
-    }
-    i = j - 1;
-  }
-  return out.join('\n');
-}
-
-// Synced docs are plain markdown (mkdocs-style — title from the h1). Starlight requires a `title` in
-// frontmatter, so derive it from the first heading (and drop that heading so it isn't duplicated).
+// Safety net: if a synced doc lacks frontmatter, derive a `title` from its first heading (Starlight
+// requires one). Source docs are authored Starlight-native + frontmatter'd, so this is a no-op on
+// them — it only saves a build if some doc ships without frontmatter.
 async function addFrontmatter(dir) {
   for (const e of await readdir(dir, { withFileTypes: true })) {
     const p = join(dir, e.name);
