@@ -1,0 +1,113 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHeader from '../../components/PageHeader.astro';
+import { getCollection } from 'astro:content';
+import { site } from '../../config/site';
+
+const guides = (await getCollection('guides', (g) => !g.data.draft)).sort(
+  (a, b) => a.data.order - b.data.order || a.data.title.localeCompare(b.data.title)
+);
+
+// Explicit category order so the page stays predictable as guides are added. Categories not
+// listed here fall to the end, alphabetically. Add new section names to extend.
+const CATEGORY_ORDER = ['Setup', 'Typing', 'Layouts', 'Fonts', 'Background', 'Troubleshooting'];
+const catRank = (name: string) => {
+  const i = CATEGORY_ORDER.indexOf(name);
+  return i === -1 ? Number.MAX_SAFE_INTEGER : i;
+};
+
+// Group by category (guides already sorted by order within each).
+const categories: { name: string; items: typeof guides }[] = [];
+for (const g of guides) {
+  let cat = categories.find((c) => c.name === g.data.category);
+  if (!cat) {
+    cat = { name: g.data.category, items: [] };
+    categories.push(cat);
+  }
+  cat.items.push(g);
+}
+categories.sort((a, b) => catRank(a.name) - catRank(b.name) || a.name.localeCompare(b.name));
+---
+
+<BaseLayout title="Guides" description="Set up and use ThariKey, plus articles on Thaana typing.">
+  <PageHeader
+    title="Guides"
+    intro="Setup help and articles on Thaana typing — from getting started to the niche corners of the script."
+  />
+
+  {categories.map((c) => (
+    <section class="cat">
+      <h2>{c.name}</h2>
+      <ul class="guide-list">
+        {c.items.map((g) => (
+          <li>
+            <a href={`/guides/${g.id}/`}>
+              <h3>{g.data.title}</h3>
+              <p>{g.data.description}</p>
+              <span class="read">Read →</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
+  ))}
+
+  <section class="contribute">
+    <h2>Contribute a guide</h2>
+    <p>
+      Guides are open source. Know a niche corner of Thaana typing worth documenting?
+      <a href={site.github}>Open a pull request on GitHub</a>.
+    </p>
+  </section>
+</BaseLayout>
+
+<style>
+  .cat { margin: 0 0 2.5rem; }
+  .cat > h2 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.4rem;
+    margin: 0 0 1rem;
+  }
+  .guide-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+    gap: 1.25rem;
+  }
+  .guide-list a {
+    display: block;
+    height: 100%;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    text-decoration: none;
+    transition: transform 0.18s, box-shadow 0.18s;
+  }
+  .guide-list a:hover { transform: translateY(-3px); box-shadow: var(--shadow-card); }
+  .guide-list h3 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.2rem;
+    margin: 0 0 0.4rem;
+  }
+  .guide-list p { color: var(--color-text-muted); margin: 0 0 0.75rem; }
+  .read { color: var(--color-accent); font-weight: 600; font-size: 0.9rem; }
+
+  .contribute {
+    margin-top: 3rem;
+    padding-top: 2.5rem;
+    border-top: 1px solid var(--color-border);
+  }
+  .contribute h2 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.3rem;
+    margin: 0 0 0.5rem;
+  }
+  .contribute p { color: var(--color-text-muted); margin: 0; max-width: 42rem; }
+  .contribute a { color: var(--color-accent); }
+</style>

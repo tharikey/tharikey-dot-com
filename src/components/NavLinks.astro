@@ -1,0 +1,114 @@
+---
+// The global nav link list, shared by the marketing header and the Starlight header.
+// Renders a dropdown for any item with `children`, opens `newWindow` items in a new tab,
+// and marks the active section so both chromes highlight consistently.
+import { navLinks } from '../config/nav';
+
+const path = Astro.url.pathname;
+const isActive = (href: string) => {
+  const base = href.split('#')[0];
+  return base === '/' ? path === '/' : path === base || path.startsWith(base);
+};
+const targetAttrs = (l: { newWindow?: boolean }) =>
+  l.newWindow ? { target: '_blank', rel: 'noopener noreferrer' } : {};
+---
+
+<ul class="nav-links">
+  {navLinks.map((l) =>
+    l.children ? (
+      <li class="has-children">
+        <a href={l.href} aria-current={isActive(l.href) ? 'page' : undefined} {...targetAttrs(l)}>
+          {l.label}<span class="caret" aria-hidden="true">▾</span>
+        </a>
+        <ul class="submenu">
+          {l.children.map((c) => (
+            <li>
+              <a href={c.href} {...targetAttrs(c)}>{c.label}</a>
+            </li>
+          ))}
+        </ul>
+      </li>
+    ) : (
+      <li>
+        <a href={l.href} aria-current={isActive(l.href) ? 'page' : undefined} {...targetAttrs(l)}>
+          {l.label}
+        </a>
+      </li>
+    )
+  )}
+</ul>
+
+<style>
+  .nav-links {
+    display: flex;
+    gap: 1.25rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .nav-links > li {
+    position: relative;
+  }
+
+  /* Colours are overridable so the Starlight header can map them onto its own
+     theme; defaults fall back to the marketing tokens. */
+  .nav-links a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    text-decoration: none;
+    color: var(--nav-link-color, var(--color-text-muted));
+    font-weight: 500;
+  }
+  .nav-links a:hover {
+    color: var(--nav-link-hover, var(--color-text));
+  }
+  .nav-links a[aria-current='page'] {
+    color: var(--nav-link-active, var(--color-accent));
+  }
+  .caret {
+    font-size: 0.7em;
+  }
+
+  /* Dropdown — CSS-only, opens on hover or keyboard focus. */
+  .submenu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 50;
+    min-width: 11rem;
+    display: none;
+    flex-direction: column;
+    list-style: none;
+    margin: 0.4rem 0 0;
+    padding: 0.4rem;
+    background: var(--nav-menu-bg, var(--color-surface));
+    border: 1px solid var(--nav-menu-border, var(--color-border));
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-card);
+  }
+  /* Transparent bridge across the gap so the cursor keeps hover while travelling
+     from the parent link down to the menu. */
+  .submenu::before {
+    content: '';
+    position: absolute;
+    top: -0.4rem;
+    left: 0;
+    right: 0;
+    height: 0.4rem;
+  }
+  .has-children:hover > .submenu,
+  .has-children:focus-within > .submenu {
+    display: flex;
+  }
+  .submenu a {
+    display: block;
+    width: 100%;
+    padding: 0.4rem 0.6rem;
+    border-radius: var(--radius-sm);
+    white-space: nowrap;
+  }
+  .submenu a:hover {
+    background: var(--nav-menu-hover, var(--color-surface-subtle));
+  }
+</style>

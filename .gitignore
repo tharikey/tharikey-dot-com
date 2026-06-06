@@ -1,0 +1,38 @@
+# build output
+dist/
+# generated types
+.astro/
+
+# dependencies
+node_modules/
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+
+# environment variables
+.env
+.env.production
+
+# macOS-specific files
+.DS_Store
+
+# jetbrains setting folder
+.idea/
+
+# Engine wasm — built locally from the sibling engine repo (`pnpm wasm`), not committed.
+# Later this comes from a published npm package instead. The playground degrades if it's absent.
+public/wasm/
+
+# CI-synced docs — source of truth is each component repo's /docs (scripts/sync-docs.mjs).
+# Content nests under docs/docs/* so the URL slug carries the /docs prefix (Starlight has no
+# routeBasePath in 0.39). Keep only the placeholder index in each section tracked; synced files ignored.
+src/content/docs/docs/engine/**
+src/content/docs/docs/macos/**
+src/content/docs/docs/fonts/**
+!src/content/docs/docs/engine/index.md
+!src/content/docs/docs/macos/index.md
+!src/content/docs/docs/fonts/index.md

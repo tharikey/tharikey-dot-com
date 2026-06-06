@@ -1,0 +1,109 @@
+---
+// Standalone pre-launch splash. Deliberately NOT using BaseLayout (no nav/footer that link into
+// the gated site). Shown to the public when the COMING_SOON gate is armed; the real site keeps
+// building underneath. See src/middleware.ts.
+const year = new Date().getFullYear();
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..600&family=Hanken+Grotesk:wght@400..700&display=swap"
+    />
+    <title>ThariKey — Coming soon</title>
+    <meta name="description" content="ThariKey is bringing sanity to Thaana input across the board. Coming soon." />
+  </head>
+  <body>
+    <main>
+      <p class="wordmark">ThariKey</p>
+      <h1>Coming<br /><span class="accent">soon.</span></h1>
+      <p class="lede">
+        We're bringing sanity to Thaana input across the board — a fast input method, a curated font
+        library, and the tooling around them. Almost there.
+      </p>
+      <div class="glyph" dir="rtl" lang="dv" aria-hidden="true">ދިވެހި</div>
+    </main>
+    <footer>© {year} ThariKey · Made with care in the Maldives</footer>
+  </body>
+</html>
+
+<style is:global>
+  @import '../styles/theme.css';
+</style>
+
+<style>
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: var(--color-bg);
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    padding: 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+  body::before {
+    content: '';
+    position: absolute;
+    inset: -20% auto auto -10%;
+    width: 40rem;
+    height: 40rem;
+    background: radial-gradient(circle at 40% 40%, rgb(31 122 90 / 12%), transparent 60%);
+    pointer-events: none;
+  }
+  main {
+    position: relative;
+    max-width: 36rem;
+  }
+  .wordmark {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.4rem;
+    color: var(--color-accent);
+    margin: 0 0 2rem;
+  }
+  h1 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: clamp(3rem, 9vw, 5.5rem);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    margin: 0 0 1.5rem;
+  }
+  h1 .accent {
+    color: var(--color-accent);
+    font-style: italic;
+  }
+  .lede {
+    font-size: 1.15rem;
+    color: var(--color-text-muted);
+    margin: 0 auto 2rem;
+    max-width: 30rem;
+  }
+  .glyph {
+    font-family: var(--font-thaana);
+    font-size: clamp(3rem, 12vw, 5rem);
+    color: var(--color-accent);
+    opacity: 0.85;
+    margin-bottom: 2rem;
+  }
+  footer {
+    position: relative;
+    margin-top: 3rem;
+    color: var(--color-text-muted);
+    font-size: 0.85rem;
+  }
+</style>

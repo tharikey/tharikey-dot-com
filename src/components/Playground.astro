@@ -1,0 +1,325 @@
+---
+// The "show don't tell" home section: type, see live Thaana, powered by the engine's wasm build.
+// The pkg is built locally from the sibling engine repo (`pnpm wasm` → public/wasm), and later from
+// a published npm package. It loads on the client and the section degrades gracefully if absent.
+//
+// Layout chooser = a dropdown fed by listSchemes(). Forward transforms use transliterate() (text
+// schemes) or a Session.feed() loop (keys schemes). Reversible text schemes get a direction toggle
+// that uses reverse() (Thaana → Latin).
+---
+
+<section id="playground" class="playground">
+  <header class="section-head">
+    <h2>See ThariKey in action</h2>
+    <a href="/docs/">Explore the docs →</a>
+  </header>
+
+  <div class="pg-card">
+    <div class="pg-bar">
+      <label class="pg-bar-label" for="pg-select">Layout</label>
+      <select id="pg-select" class="pg-select"></select>
+      <button id="pg-dir" class="dir-btn" type="button" hidden>Latin → Thaana</button>
+    </div>
+
+    <div class="pad">
+      <div class="pane pane-in">
+        <div class="pane-head">
+          <span class="pane-title" id="pg-in-title">What you type</span>
+          <span class="pane-cap" id="pg-in-cap">keys on your keyboard</span>
+        </div>
+        <textarea id="pg-in" placeholder="Start typing…" spellcheck="false" rows="4"></textarea>
+      </div>
+
+      <div class="pane-arrow" aria-hidden="true"><span>→</span></div>
+
+      <div class="pane pane-out">
+        <div class="pane-head">
+          <span class="pane-title" id="pg-out-title">What comes out</span>
+          <span class="pane-cap" id="pg-out-cap">Thaana from the engine</span>
+        </div>
+        <output id="pg-out" class="thaana" dir="rtl" lang="dv" aria-live="polite"></output>
+      </div>
+    </div>
+
+    <p class="hint" id="pg-hint"></p>
+  </div>
+</section>
+
+<script>
+  const input = document.getElementById('pg-in') as HTMLTextAreaElement | null;
+  const out = document.getElementById('pg-out');
+  const hint = document.getElementById('pg-hint');
+  const selectEl = document.getElementById('pg-select') as HTMLSelectElement | null;
+  const dirBtn = document.getElementById('pg-dir') as HTMLButtonElement | null;
+  const inTitle = document.getElementById('pg-in-title');
+  const inCap = document.getElementById('pg-in-cap');
+  const outCap = document.getElementById('pg-out-cap');
+
+  type SchemeInfo = { id: string; name: string; kind: string };
+
+  async function boot() {
+    let mod: any;
+    try {
+      // Served from /public. Import as a fully-qualified URL so Vite treats it as external (a
+      // root-relative '/wasm/...' would be pulled into Vite's module pipeline, which rejects public
+      // files). The web-target init then fetches the .wasm relative to this URL.
+      const spec = new URL('/wasm/tharikey.js', window.location.origin).href;
+      mod = await import(/* @vite-ignore */ spec);
+      await mod.default();
+    } catch {
+      if (hint) hint.textContent = 'Engine preview coming soon — the wasm build isn’t wired in yet.';
+      return;
+    }
+
+    const schemes: SchemeInfo[] = mod.listSchemes();
+    if (!schemes.length || !input || !out || !selectEl) {
+      if (hint) hint.textContent = 'Engine preview coming soon.';
+      return;
+    }
+
+    let current = schemes[0];
+    let reversed = false;
+
+    const setScript = (el: Element, thaana: boolean) => {
+      el.setAttribute('dir', thaana ? 'rtl' : 'ltr');
+      el.setAttribute('lang', thaana ? 'dv' : 'en');
+      el.classList.toggle('thaana', thaana);
+    };
+
+    const isReversible = () => {
+      if (current.kind !== 'text') return false;
+      try {
+        return mod.reverse(current.id, 'ހ') != null;
+      } catch {
+        return false;
+      }
+    };
+
+    const forward = (text: string) => {
+      if (current.kind === 'text') return mod.transliterate(current.id, text);
+      // keys scheme: rebuild from each key's response so passthrough chars (spaces, punctuation)
+      // are kept — session.output() holds only the composed Thaana.
+      const s = new mod.Session(current.id);
+      let result = '';
+      for (const ch of text) {
+        const upper = ch >= 'A' && ch <= 'Z';
+        const r = s.feed(upper ? ch.toLowerCase() : ch, upper ? 'shift' : 'base');
+        if (r.action === 'insert') result += r.text;
+        else if (r.action === 'replace') {
+          const cps = [...result];
+          result = cps.slice(0, Math.max(0, cps.length - r.deleteUnits)).join('') + r.text;
+        } else result += ch;
+      }
+      return result;
+    };
+
+    const transform = () => {
+      try {
+        out.textContent = reversed
+          ? (mod.reverse(current.id, input.value) ?? '')
+          : forward(input.value);
+      } catch {
+        out.textContent = '';
+      }
+    };
+
+    const applyDirectionUI = () => {
+      const reversible = isReversible();
+      if (!reversible) reversed = false;
+      if (dirBtn) {
+        dirBtn.hidden = !reversible;
+        dirBtn.textContent = reversed ? 'Thaana → Latin' : 'Latin → Thaana';
+      }
+      setScript(input, reversed); // reversed → you type Thaana
+      setScript(out, !reversed); // reversed → output is Latin
+      if (inTitle) inTitle.textContent = reversed ? 'Thaana you type' : 'What you type';
+      if (inCap) inCap.textContent = reversed ? 'the Thaana script' : 'keys on your keyboard';
+      if (outCap) outCap.textContent = reversed ? 'Latin from the engine' : 'Thaana from the engine';
+      input.placeholder = reversed ? 'ލިޔުއްވާ…' : 'Start typing…';
+    };
+
+    dirBtn?.addEventListener('click', () => {
+      const carried = out.textContent ?? '';
+      reversed = !reversed;
+      applyDirectionUI();
+      input.value = carried;
+      transform();
+      input.focus();
+    });
+
+    schemes.forEach((sc) => {
+      const opt = document.createElement('option');
+      opt.value = sc.id;
+      opt.textContent = sc.name;
+      selectEl.appendChild(opt);
+    });
+    selectEl.value = current.id;
+    selectEl.addEventListener('change', () => {
+      current = schemes.find((s) => s.id === selectEl.value) ?? schemes[0];
+      reversed = false;
+      applyDirectionUI();
+      transform();
+      input.focus();
+    });
+
+    input.addEventListener('input', transform);
+    applyDirectionUI();
+  }
+
+  boot();
+</script>
+
+<style>
+  .playground { margin: 4rem 0; }
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+  }
+  .section-head h2 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.9rem;
+    margin: 0;
+  }
+  .section-head a { color: var(--color-accent); text-decoration: none; font-weight: 600; }
+
+  .pg-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+  }
+
+  /* top bar: layout dropdown + direction toggle */
+  .pg-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    padding: 1rem 1.25rem;
+  }
+  .pg-bar-label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--color-text-muted);
+  }
+  .pg-select {
+    appearance: none;
+    font: inherit;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--color-text);
+    background:
+      var(--color-surface)
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' fill='none' stroke='%235e6159' stroke-width='1.5' stroke-linecap='round'><path d='M3 4.5 6 7.5 9 4.5'/></svg>")
+      no-repeat right 0.7rem center;
+    background-size: 0.7rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    padding: 0.45rem 2rem 0.45rem 0.85rem;
+    cursor: pointer;
+  }
+  .pg-select:hover,
+  .pg-select:focus { outline: none; border-color: var(--color-accent); }
+
+  .dir-btn {
+    margin-left: auto;
+    appearance: none;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    font: inherit;
+    font-weight: 600;
+    font-size: 0.82rem;
+    color: var(--color-text);
+    padding: 0.45rem 0.85rem;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .dir-btn:hover { border-color: var(--color-accent); color: var(--color-accent); }
+  .dir-btn[hidden] { display: none; }
+
+  /* panes */
+  .pad {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    border-top: 1px solid var(--color-border);
+  }
+  .pane { display: flex; flex-direction: column; min-width: 0; }
+  .pane-head {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    padding: 1rem 1.5rem 0.4rem;
+  }
+  .pane-title { font-weight: 600; font-size: 0.95rem; }
+  .pane-cap { color: var(--color-text-muted); font-size: 0.8rem; }
+  /* neutral seam with a small circular connector badge floating on the boundary */
+  .pane-arrow {
+    display: grid;
+    place-items: center;
+    padding: 0 0.6rem;
+    background: transparent;
+  }
+  .pane-arrow span {
+    display: grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    box-shadow: var(--shadow-card);
+    color: var(--color-accent);
+    font-size: 1.05rem;
+  }
+  textarea,
+  output {
+    flex: 1;
+    padding: 1.25rem 1.5rem 1.5rem;
+    font-size: 1.4rem;
+    min-height: 6.5rem;
+    border: none;
+    font-family: inherit;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  /* each pane is one continuous block (head + field share the pane's background) */
+  .pane-in { background: var(--color-surface); }       /* input = white, active */
+  .pane-out { background: var(--color-surface-subtle); } /* output = muted, read-only */
+  textarea,
+  output { background: transparent; }
+  textarea {
+    color: var(--color-text);
+    resize: vertical;
+  }
+  textarea:focus { outline: none; }
+  /* accent text marks the output as the engine's result */
+  output {
+    display: block;
+    color: var(--color-accent);
+  }
+  .thaana { font-family: var(--font-thaana); }
+
+  /* only shown if the engine can't load */
+  .hint {
+    margin: 0;
+    padding: 0.85rem 1.5rem;
+    border-top: 1px solid var(--color-border);
+    color: var(--color-text-muted);
+    font-size: 0.85rem;
+    background: var(--color-surface-subtle);
+  }
+  .hint:empty { display: none; }
+
+  @media (max-width: 42rem) {
+    .pad { grid-template-columns: 1fr; }
+    .pane-arrow { padding: 0.5rem; }
+    .pane-arrow span { transform: rotate(90deg); }
+  }
+</style>

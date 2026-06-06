@@ -1,0 +1,7 @@
+{
+  "version": null,
+  "assetUrl": null,
+  "size": null,
+  "notes": null,
+  "_comment": "Default 'no release yet' state. Overwritten at build time by scripts/fetch-release.mjs from the tharikey-macos GitHub releases. Until signing/notarization lands, this stays null and Download shows 'coming soon'."
+}

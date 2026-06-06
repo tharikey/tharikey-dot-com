@@ -1,0 +1,41 @@
+---
+// Editorial title block for marketing sub-pages, so every page opens consistently.
+// The breadcrumb trail is the small line above the title (it replaces a separate eyebrow).
+// `breadcrumbCurrent` overrides the last breadcrumb label for dynamic routes.
+import Breadcrumbs from './Breadcrumbs.astro';
+
+interface Props {
+  title: string;
+  intro?: string;
+  breadcrumbCurrent?: string;
+}
+const { title, intro, breadcrumbCurrent } = Astro.props;
+---
+
+<header class="page-header">
+  <Breadcrumbs current={breadcrumbCurrent} />
+  <h1>{title}</h1>
+  {intro && <p class="intro">{intro}</p>}
+</header>
+
+<style>
+  .page-header {
+    padding: 2.5rem 0 2rem;
+    border-bottom: 1px solid var(--color-border);
+    margin-bottom: 2.5rem;
+  }
+  h1 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: clamp(2.25rem, 5vw, 3.25rem);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin: 0;
+  }
+  .intro {
+    font-size: 1.2rem;
+    color: var(--color-text-muted);
+    max-width: 40rem;
+    margin: 1rem 0 0;
+  }
+</style>

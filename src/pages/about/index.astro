@@ -1,0 +1,210 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHeader from '../../components/PageHeader.astro';
+import { sponsorTiers, credits } from '../../data/sponsors';
+import { acknowledgements } from '../../data/acknowledgements';
+
+const pillars = [
+  {
+    title: 'One coherent toolkit',
+    body: 'Input method, fonts, and the engine behind them — designed together, not stitched from scattered parts.',
+  },
+  {
+    title: 'A lexicon-free engine',
+    body: 'The core is rules, not a dictionary — portable, predictable, and open for anyone to build on.',
+  },
+  {
+    title: 'Built in the open',
+    body: 'Open source, documented, and credited. The fonts are OFL; the tooling is there to read.',
+  },
+];
+---
+
+<BaseLayout title="About" description="What ThariKey is, why it exists, and who's behind it.">
+  <PageHeader title="Bringing sanity to Thaana input." />
+
+  <div class="prose">
+    <p>
+      Thaana input has long been a patchwork — scattered layouts, fonts hunted down across the web,
+      and no single place that treats Dhivehi typing as a first-class problem.
+    </p>
+    <p>
+      ThariKey is the attempt to fix that across the board: a fast, data-driven input method built on
+      a lexicon-free engine, a curated font library you can install in a click, and open
+      documentation for everyone building on top.
+    </p>
+  </div>
+
+  <section class="pillars">
+    {pillars.map((p) => (
+      <article>
+        <h2>{p.title}</h2>
+        <p>{p.body}</p>
+      </article>
+    ))}
+  </section>
+
+  <!-- Sponsors & credits (single about page) — tiered, from data -->
+  <section id="sponsors" class="sponsors">
+    <h2 class="section-title">Sponsors &amp; credits</h2>
+
+    {sponsorTiers.map((tier) => (
+      <div class="tier">
+        <div class="tier-head">
+          <h3>{tier.label}</h3>
+          {tier.description && <p class="tier-desc">{tier.description}</p>}
+        </div>
+        <ul class="grid">
+          {tier.sponsors.map((s) => (
+            <li>
+              <span class="name">
+                {s.url ? <a href={s.url} target="_blank" rel="noopener noreferrer">{s.name}</a> : s.name}
+              </span>
+              {s.note && <span class="note">{s.note}</span>}
+            </li>
+          ))}
+        </ul>
+      </div>
+    ))}
+
+    {credits.length > 0 && (
+      <div class="tier">
+        <div class="tier-head"><h3>With thanks</h3></div>
+        <ul class="grid">
+          {credits.map((s) => (
+            <li>
+              <span class="name">
+                {s.url ? <a href={s.url} target="_blank" rel="noopener noreferrer">{s.name}</a> : s.name}
+              </span>
+              {s.note && <span class="note">{s.note}</span>}
+            </li>
+          ))}
+        </ul>
+      </div>
+    )}
+  </section>
+
+  <!-- Acknowledgements: prior art / data / inspiration we built on -->
+  <section class="acks">
+    <h2 class="section-title">Acknowledgements</h2>
+    <p class="acks-intro">
+      ThariKey stands on the shoulders of these projects, datasets, and communities.
+    </p>
+    <ul class="ack-grid">
+      {acknowledgements.map((a) => (
+        <li>
+          <a href={a.url} target="_blank" rel="noopener noreferrer">
+            <span class="ack-name">{a.name}</span>
+            <span class="ack-note">{a.note}</span>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </section>
+</BaseLayout>
+
+<style>
+  .prose {
+    max-width: 42rem;
+    font-size: 1.15rem;
+  }
+  .prose p { margin: 0 0 1.25rem; }
+
+  .pillars {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+    gap: 1.5rem;
+    margin: 3rem 0;
+  }
+  .pillars article {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+  }
+  .pillars h2 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.2rem;
+    margin: 0 0 0.5rem;
+  }
+  .pillars p { margin: 0; color: var(--color-text-muted); }
+
+  /* sponsors */
+  .sponsors { margin: 4rem 0 0; padding-top: 3rem; border-top: 1px solid var(--color-border); }
+  .section-title {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.6rem;
+    margin: 0 0 1.5rem;
+  }
+  .tier { margin: 2.5rem 0; }
+  .tier-head { margin-bottom: 1rem; }
+  .tier-head h3 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.2rem;
+    margin: 0;
+  }
+  .tier-desc { margin: 0.2rem 0 0; color: var(--color-text-muted); font-size: 0.95rem; }
+  .grid {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+    gap: 1.25rem;
+  }
+  .grid li {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+  }
+  .name { font-family: var(--font-display); font-weight: 600; font-size: 1.3rem; }
+  .name a { color: inherit; text-decoration: none; }
+  .name a:hover { color: var(--color-accent); }
+  .note { color: var(--color-text-muted); }
+
+  /* acknowledgements — link-cards, its own treatment vs the sponsor cards */
+  .acks { margin: 4rem 0 0; padding-top: 3rem; border-top: 1px solid var(--color-border); }
+  .acks-intro { color: var(--color-text-muted); margin: 0 0 1.75rem; max-width: 42rem; }
+  .ack-grid {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+    gap: 0.85rem;
+  }
+  .ack-grid a {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    height: 100%;
+    padding: 1.1rem 1.25rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    text-decoration: none;
+    transition: border-color 0.18s, transform 0.18s, box-shadow 0.18s;
+  }
+  .ack-grid a:hover {
+    border-color: var(--color-accent);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-card);
+  }
+  .ack-name {
+    font-family: var(--font-display);
+    font-weight: 600;
+    color: var(--color-accent);
+  }
+  .ack-note {
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+</style>

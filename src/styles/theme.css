@@ -1,0 +1,91 @@
+/* ---------------------------------------------------------------------------
+   Design tokens — the single source of truth for the palette, type, and shape.
+   Marketing pages consume these directly; the Starlight mapping at the bottom
+   re-expresses them as --sl-* variables so /docs shares one theme.
+
+   Palette direction is a first pass (cream + forest green, from the mock) —
+   tweak the hex here and it propagates everywhere. Nothing else holds raw colour.
+--------------------------------------------------------------------------- */
+:root {
+  /* palette */
+  --color-bg: #faf7f0;
+  --color-surface: #ffffff;
+  --color-surface-subtle: #f4f0e6;
+  --color-text: #1a1c19;
+  --color-text-muted: #5e6159;
+  --color-border: #e8e3d7;
+  --color-border-subtle: #f0ebdf;
+  --color-danger: #a4302a;
+  --color-accent: #1f7a5a;
+  --color-accent-hover: #176046;
+  --color-on-accent: #ffffff;
+
+  /* type */
+  --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+  --font-sans: 'Hanken Grotesk', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', 'SFMono-Regular', Menlo, monospace;
+  /* Thaana specimens — system fallback for now; a hosted webfont comes later. */
+  --font-thaana: 'MV Faseyha', 'MV Boli', 'Faruma', 'A_Faruma', 'Noto Sans Thaana', sans-serif;
+
+  /* shape */
+  --radius-sm: 0.5rem;
+  --radius-md: 0.625rem;
+  --radius-lg: 0.875rem;
+  --radius-xl: 1.25rem;
+  --shadow-card: 0 1px 2px rgb(20 30 25 / 4%), 0 4px 16px rgb(20 30 25 / 4%);
+  --shadow-lift: 0 2px 6px rgb(20 30 25 / 5%), 0 16px 40px rgb(20 30 25 / 9%);
+
+  /* layout */
+  --content-max: 64rem;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* Marketing chrome base. Scoped to <body class="marketing"> so it never leaks
+   into Starlight's own layout (which manages its surfaces via --sl-* vars). */
+.marketing {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  line-height: 1.6;
+}
+.marketing a {
+  color: inherit;
+}
+.site-main {
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+/* ---------------------------------------------------------------------------
+   Starlight theme mapping. Express our tokens as Starlight variables so the
+   docs match the site. We tune the accent ramp + the light surface here; the
+   full gray ramp can be refined in the design pass.
+--------------------------------------------------------------------------- */
+:root {
+  --sl-font: var(--font-sans);
+}
+
+/* dark (Starlight's default scheme) — green accent on Starlight's dark surface */
+:root[data-theme='dark'] {
+  --sl-color-accent-low: #102a20;
+  --sl-color-accent: #3a9b74;
+  --sl-color-accent-high: #b9e6d4;
+}
+
+/* light — match the cream marketing surface */
+:root[data-theme='light'] {
+  --sl-color-accent-low: #cfe7dd;
+  --sl-color-accent: var(--color-accent);
+  --sl-color-accent-high: #143f2e;
+  --sl-color-bg: var(--color-bg);
+  --sl-color-bg-nav: var(--color-bg);
+  --sl-color-bg-sidebar: var(--color-bg);
+  --sl-color-text-accent: var(--color-accent);
+}

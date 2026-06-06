@@ -1,0 +1,33 @@
+---
+// Primary download CTA, powered by the resolved release data (src/config/site.ts → release.json,
+// produced at build by scripts/fetch-release.mjs). The site hosts no binaries — this links the
+// release asset. Until signing/notarization lands and a real release exists, it shows "coming soon".
+import { release } from '../config/site';
+
+const available = Boolean(release.assetUrl);
+---
+
+{available ? (
+  <a class="btn" href={release.assetUrl!}>
+    Download for macOS
+    <span class="meta">{release.version}{release.size ? ` · ${release.size}` : ''}</span>
+  </a>
+) : (
+  <span class="btn disabled">
+    Download for macOS
+    <span class="meta">coming soon</span>
+  </span>
+)}
+
+<style>
+  .btn {
+    display: inline-flex; flex-direction: column; align-items: center;
+    padding: 0.85rem 1.75rem; border-radius: var(--radius-md);
+    background: var(--color-accent); color: var(--color-on-accent);
+    text-decoration: none; font-weight: 600;
+  }
+  .btn:hover { background: var(--color-accent-hover); }
+  .btn.disabled { background: var(--color-text-muted); cursor: not-allowed; }
+  .btn.disabled:hover { background: var(--color-text-muted); }
+  .meta { font-weight: 400; font-size: 0.8rem; opacity: 0.85; }
+</style>

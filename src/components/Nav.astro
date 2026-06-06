@@ -1,0 +1,114 @@
+---
+// Marketing site header: brand + the shared global nav, with a hamburger on small screens.
+// The Starlight docs use their own header; this is marketing-only.
+import NavLinks from './NavLinks.astro';
+---
+
+<header>
+  <nav>
+    <a href="/" class="brand">ThariKey</a>
+    <button
+      class="nav-toggle"
+      aria-expanded="false"
+      aria-controls="nav-menu"
+      aria-label="Toggle menu"
+    >
+      <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+    </button>
+    <div id="nav-menu" class="nav-menu">
+      <NavLinks />
+    </div>
+  </nav>
+</header>
+
+<script>
+  const btn = document.querySelector<HTMLButtonElement>('.nav-toggle');
+  const menu = document.getElementById('nav-menu');
+  const setOpen = (open: boolean) => {
+    btn?.setAttribute('aria-expanded', String(open));
+    menu?.classList.toggle('open', open);
+  };
+  btn?.addEventListener('click', () =>
+    setOpen(btn.getAttribute('aria-expanded') !== 'true')
+  );
+  // Close after picking a link (mobile).
+  menu?.querySelectorAll('a').forEach((a) => a.addEventListener('click', () => setOpen(false)));
+</script>
+
+<style>
+  header {
+    border-bottom: 1px solid var(--color-border);
+    position: relative;
+    background: var(--color-bg);
+  }
+  nav {
+    max-width: var(--content-max);
+    margin: 0 auto;
+    padding: 1rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+  }
+  .brand {
+    font-weight: 700;
+    text-decoration: none;
+    font-size: 1.1rem;
+    color: var(--color-accent);
+  }
+  .nav-menu { display: flex; }
+
+  /* hamburger — hidden on desktop */
+  .nav-toggle {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    width: 2.5rem;
+    height: 2.5rem;
+    padding: 0;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-surface);
+    cursor: pointer;
+  }
+  .nav-toggle .bar {
+    display: block;
+    width: 18px;
+    height: 2px;
+    margin: 0 auto;
+    background: var(--color-text);
+    border-radius: 2px;
+    transition: transform 0.2s, opacity 0.2s;
+  }
+  .nav-toggle[aria-expanded='true'] .bar:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+  .nav-toggle[aria-expanded='true'] .bar:nth-child(2) { opacity: 0; }
+  .nav-toggle[aria-expanded='true'] .bar:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+
+  @media (max-width: 44rem) {
+    .nav-toggle { display: flex; }
+    .nav-menu {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: var(--color-bg);
+      border-bottom: 1px solid var(--color-border);
+      box-shadow: var(--shadow-card);
+      padding: 0.5rem 1.5rem 1rem;
+      z-index: 60;
+    }
+    .nav-menu.open { display: block; }
+    :global(.nav-menu .nav-links) {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0;
+    }
+    :global(.nav-menu .nav-links a) {
+      display: block;
+      padding: 0.7rem 0;
+      border-bottom: 1px solid var(--color-border-subtle);
+    }
+  }
+</style>

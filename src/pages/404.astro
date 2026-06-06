@@ -1,0 +1,14 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Page not found" description="That page doesn't exist.">
+  <section class="notfound">
+    <h1>Page not found</h1>
+    <p>That page doesn't exist. Try the <a href="/">home page</a> or the <a href="/docs/">docs</a>.</p>
+  </section>
+</BaseLayout>
+
+<style>
+  .notfound { text-align: center; padding: 4rem 0; }
+</style>

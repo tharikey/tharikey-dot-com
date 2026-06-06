@@ -1,0 +1,172 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHeader from '../components/PageHeader.astro';
+import DownloadButton from '../components/DownloadButton.astro';
+import { release, platforms } from '../config/site';
+
+const steps = [
+  { n: '1', title: 'Install the app', body: 'Download and move ThariKey to your Applications folder.' },
+  { n: '2', title: 'Enable the input method', body: 'Turn ThariKey on in System Settings → Keyboard → Input Sources.' },
+  { n: '3', title: 'Pick a layout & type', body: 'Choose a keyboard layout and start writing Thaana anywhere.' },
+];
+---
+
+<BaseLayout title="Download" description="Download ThariKey — the Thaana input method and font tools.">
+  <PageHeader
+    title="Get ThariKey"
+    intro="Free and open source. Available for macOS now, with Windows and Linux on the way."
+  />
+
+  <!-- DOWNLOAD, per platform (+ fonts as the distinct last item) -->
+  <section class="platforms">
+    <ul>
+      {platforms.map((p) => (
+        <li class={p.status}>
+          <div class="p-info">
+            <div class="p-top">
+              <span class="os">{p.os}</span>
+              <span class="badge">{p.status === 'available' ? 'Available' : 'Coming soon'}</span>
+            </div>
+            <p class="note">{p.note}</p>
+          </div>
+          {p.status === 'available' && (
+            <div class="p-get"><DownloadButton /></div>
+          )}
+        </li>
+      ))}
+
+      <li class="fonts-row">
+        <div class="p-info">
+          <div class="p-top"><span class="os">Thaana fonts</span></div>
+          <p class="note">A curated font library, installed in a click from the app.</p>
+        </div>
+        <a class="btn-ghost" href="/fonts/">Browse fonts →</a>
+      </li>
+    </ul>
+  </section>
+
+  <!-- AFTER YOU INSTALL -->
+  <section class="setup">
+    <h2>After you install</h2>
+    <ol class="steps">
+      {steps.map((s) => (
+        <li>
+          <span class="num">{s.n}</span>
+          <div>
+            <h3>{s.title}</h3>
+            <p>{s.body}</p>
+          </div>
+        </li>
+      ))}
+    </ol>
+    <p class="more"><a href="/guides/">Full setup guides →</a></p>
+  </section>
+
+  <!-- WHAT'S NEW -->
+  <section id="whats-new" class="whats-new">
+    <h2>What's new</h2>
+    {release.notes ? (
+      <div class="notes" set:html={release.notes} />
+    ) : (
+      <p class="muted">
+        Release notes will appear here once the first build ships. The full history will live in the
+        macOS changelog.
+      </p>
+    )}
+  </section>
+</BaseLayout>
+
+<style>
+  h2 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.6rem;
+    margin: 0 0 1.25rem;
+  }
+  section { margin: 3rem 0; }
+
+  .btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.85rem 1.5rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    text-decoration: none;
+    font-weight: 600;
+    transition: border-color 0.18s, transform 0.18s;
+  }
+  .btn-ghost:hover { border-color: var(--color-accent); transform: translateY(-1px); }
+
+  /* download per platform */
+  .platforms { margin-top: 2rem; }
+  .platforms ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 1rem; }
+  .platforms li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    padding: 1.75rem 2rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+  }
+  .platforms li.available { border-color: var(--color-accent); }
+  .platforms li.soon { opacity: 0.7; }
+  .p-top { display: flex; align-items: center; gap: 0.75rem; }
+  .os { font-family: var(--font-display); font-weight: 600; font-size: 1.3rem; }
+  .badge {
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+  }
+  .available .badge { background: rgb(31 122 90 / 12%); color: var(--color-accent); }
+  .soon .badge { background: var(--color-surface-subtle); color: var(--color-text-muted); }
+  .note { margin: 0.4rem 0 0; color: var(--color-text-muted); font-size: 0.92rem; }
+
+  /* after you install — horizontal */
+  .steps {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+  }
+  .steps li {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+  }
+  .num {
+    width: 2rem; height: 2rem;
+    display: grid; place-items: center;
+    border-radius: 50%;
+    background: rgb(31 122 90 / 12%);
+    color: var(--color-accent);
+    font-weight: 700;
+    margin-bottom: 0.9rem;
+  }
+  .steps h3 { font-weight: 600; margin: 0 0 0.2rem; }
+  .steps p { margin: 0; color: var(--color-text-muted); }
+  .more { margin: 1.25rem 0 0; }
+  .more a { color: var(--color-accent); font-weight: 600; }
+
+  /* what's new */
+  .muted { color: var(--color-text-muted); }
+  .notes :global(h2),
+  .notes :global(h3) { font-size: 1.1rem; }
+
+  /* fonts row — distinct from the platform rows, last in the download list */
+  .platforms li.fonts-row { background: var(--color-surface-subtle); }
+
+  @media (max-width: 46rem) {
+    .steps { grid-template-columns: 1fr; }
+    .platforms li { flex-direction: column; align-items: flex-start; }
+  }
+</style>

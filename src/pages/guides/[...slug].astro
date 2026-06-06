@@ -1,0 +1,58 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import { getCollection, render } from 'astro:content';
+
+export async function getStaticPaths() {
+  const guides = await getCollection('guides', (g) => !g.data.draft);
+  return guides.map((guide) => ({ params: { slug: guide.id }, props: { guide } }));
+}
+
+const { guide } = Astro.props;
+const { Content } = await render(guide);
+---
+
+<BaseLayout title={guide.data.title} description={guide.data.description}>
+  <article class="guide">
+    <Breadcrumbs current={guide.data.title} />
+    <p class="cat">{guide.data.category}</p>
+    <h1>{guide.data.title}</h1>
+    <div class="body">
+      <Content />
+    </div>
+    <p class="back"><a href="/guides/">← All guides</a></p>
+  </article>
+</BaseLayout>
+
+<style>
+  .guide { max-width: 44rem; margin: 0 auto; padding-top: 1.5rem; }
+  .cat {
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: 0.74rem;
+    font-weight: 600;
+    color: var(--color-accent);
+    margin: 1.5rem 0 0.4rem;
+  }
+  h1 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: clamp(2rem, 5vw, 3rem);
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    margin: 0 0 2rem;
+  }
+  .body { font-size: 1.12rem; line-height: 1.75; }
+  .body :global(p) { margin: 0 0 1.25rem; }
+  .body :global(a) { color: var(--color-accent); }
+  .body :global(h2) {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.4rem;
+    margin: 2rem 0 0.75rem;
+  }
+  .body :global(ul) { margin: 0 0 1.25rem; padding-left: 1.25rem; }
+  .body :global(li) { margin: 0.35rem 0; }
+  .back { margin-top: 2.5rem; }
+  .back a { color: var(--color-accent); font-weight: 600; text-decoration: none; }
+</style>

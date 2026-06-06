@@ -1,0 +1,282 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHeader from '../components/PageHeader.astro';
+
+// Build-time fetch of the live font manifest (same source the macOS app consumes). One source of
+// truth — fonts.tharikey.com R2. Live specimens (per-font @font-face) are a follow-up; for now the
+// catalog is metadata-rich and filterable, structured so previews can drop in later.
+const MANIFEST_URL = 'https://fonts.tharikey.com/manifest.min.json';
+
+interface FontFile { archive?: string | null; url?: string | null }
+interface Family {
+  id: string; name: string; nameDv?: string | null; foundry: string;
+  designer?: string | null; description?: string | null; tier: string;
+  category?: string[]; variable?: boolean; weights?: number;
+  homepage?: string | null; purchaseUrl?: string | null; files?: FontFile[];
+}
+interface Foundry { id: string; name: string; description?: string | null; url?: string | null }
+interface Bundle {
+  id: string; name: string; description?: string | null; families: string[]; featured?: boolean;
+}
+
+let families: Family[] = [];
+let foundries: Foundry[] = [];
+let bundles: Bundle[] = [];
+let error: string | null = null;
+try {
+  const res = await fetch(MANIFEST_URL);
+  if (!res.ok) throw new Error(`manifest ${res.status}`);
+  const m = await res.json();
+  families = m.families ?? [];
+  foundries = m.foundries ?? [];
+  bundles = m.bundles ?? [];
+} catch (e) {
+  error = e instanceof Error ? e.message : String(e);
+}
+
+const foundryName = (id: string) => foundries.find((f) => f.id === id)?.name ?? id;
+const foundryUrl = (id: string) => foundries.find((f) => f.id === id)?.url ?? undefined;
+const familyName = (id: string) => families.find((f) => f.id === id)?.name ?? id;
+
+const weightsLabel = (f: Family) => {
+  const w = f.weights ?? 1;
+  if (f.variable) return w > 1 ? `Variable · ${w} weights` : 'Variable';
+  return `${w} weight${w === 1 ? '' : 's'}`;
+};
+
+const freeCount = families.filter((f) => f.tier === 'free').length;
+const premiumCount = families.filter((f) => f.tier === 'premium').length;
+---
+
+<BaseLayout
+  title="Fonts"
+  description="A curated Thaana font library — browse the collection and install in a click from the app."
+>
+  <PageHeader
+    title="A Thaana font library"
+    intro="A curated collection of Thaana typefaces — browse here, install in a click from the app."
+  />
+
+  {error && <p class="err">Couldn't load the font catalog ({error}).</p>}
+
+  {!error && (
+    <>
+      {bundles.length > 0 && (
+        <section class="bundles">
+          <h2>Collections</h2>
+          <div class="bundle-grid">
+            {bundles.map((b) => (
+              <article class="bundle">
+                <h3>{b.name}</h3>
+                {b.description && <p class="b-desc">{b.description}</p>}
+                <ul class="b-members">
+                  {b.families.map((id) => <li>{familyName(id)}</li>)}
+                </ul>
+                <p class="b-note">Install the set in a click from the app.</p>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <section class="catalog">
+        <div class="cat-head">
+          <h2>All fonts</h2>
+          <div class="filters" role="group" aria-label="Filter by tier">
+            <button data-filter="all" aria-pressed="true">All ({families.length})</button>
+            <button data-filter="free" aria-pressed="false">Free ({freeCount})</button>
+            <button data-filter="premium" aria-pressed="false">Premium ({premiumCount})</button>
+          </div>
+        </div>
+
+        <ul class="grid">
+          {families.map((f) => {
+            const premium = f.tier === 'premium';
+            const href = premium ? f.purchaseUrl : (f.homepage ?? foundryUrl(f.foundry));
+            return (
+              <li data-tier={f.tier}>
+                <div class="card-top">
+                  <span class="f-name">{f.name}</span>
+                  <span class={`badge ${f.tier}`}>{premium ? 'Premium' : 'Free'}</span>
+                </div>
+                <span class="f-foundry">{foundryName(f.foundry)}</span>
+                {f.category && f.category.length > 0 && (
+                  <div class="tags">{f.category.map((c) => <span class="tag">{c}</span>)}</div>
+                )}
+                {f.description && <p class="f-desc">{f.description}</p>}
+                <p class="f-meta">
+                  {f.designer && <span>{f.designer}</span>}
+                  <span>{weightsLabel(f)}</span>
+                </p>
+                {href && (
+                  <a class="f-link" href={href} target="_blank" rel="noopener noreferrer">
+                    {premium ? 'Buy →' : 'View →'}
+                  </a>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      </section>
+
+      <section class="install">
+        <h2>Installing fonts</h2>
+        <p>
+          Free fonts install in a click from the ThariKey app, which registers them for every app on
+          your Mac. Premium families link out to the foundry. <a href="/download/">Get the app</a> to
+          install the full library.
+        </p>
+      </section>
+
+      <section class="foundries">
+        <h2>Foundries</h2>
+        <div class="foundry-grid">
+          {foundries.map((fo) => (
+            <article class="foundry">
+              <h3>{fo.name}</h3>
+              {fo.description && <p>{fo.description}</p>}
+              {fo.url && (
+                <a href={fo.url} target="_blank" rel="noopener noreferrer">Visit {fo.name} →</a>
+              )}
+            </article>
+          ))}
+        </div>
+        <p class="thanks">With thanks to the foundries and designers — see <a href="/about/#sponsors">credits</a>.</p>
+      </section>
+    </>
+  )}
+</BaseLayout>
+
+<script>
+  const btns = Array.from(document.querySelectorAll<HTMLButtonElement>('.filters button'));
+  const cards = Array.from(document.querySelectorAll<HTMLLIElement>('.grid li'));
+  btns.forEach((b) =>
+    b.addEventListener('click', () => {
+      const f = b.dataset.filter;
+      btns.forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+      cards.forEach((c) => {
+        c.hidden = !(f === 'all' || c.dataset.tier === f);
+      });
+    })
+  );
+</script>
+
+<style>
+  section { margin: 3rem 0; }
+  h2 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.5rem;
+    margin: 0;
+  }
+  .err { color: var(--color-danger); }
+
+  /* collections */
+  .bundles h2 { margin-bottom: 1.25rem; }
+  .bundle-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+    gap: 1.25rem;
+  }
+  .bundle {
+    background: var(--color-surface-subtle);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+  }
+  .bundle h3 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.2rem;
+    margin: 0 0 0.4rem;
+  }
+  .b-desc { color: var(--color-text-muted); margin: 0 0 0.9rem; }
+  .b-members {
+    list-style: none; margin: 0 0 0.9rem; padding: 0;
+    display: flex; flex-wrap: wrap; gap: 0.4rem;
+  }
+  .b-members li {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    padding: 0.2rem 0.7rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+  .b-note { color: var(--color-text-muted); font-size: 0.85rem; margin: 0; }
+
+  /* catalog head + filters */
+  .cat-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+  }
+  .filters { display: inline-flex; gap: 2px; padding: 3px; background: var(--color-surface-subtle); border: 1px solid var(--color-border); border-radius: 999px; }
+  .filters button {
+    appearance: none; border: none; background: transparent;
+    font: inherit; font-weight: 600; font-size: 0.82rem;
+    color: var(--color-text-muted); padding: 0.35rem 0.85rem;
+    border-radius: 999px; cursor: pointer;
+  }
+  .filters button:hover { color: var(--color-text); }
+  .filters button[aria-pressed='true'] { background: var(--color-accent); color: var(--color-on-accent); }
+
+  /* font cards */
+  .grid {
+    list-style: none; margin: 0; padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+    gap: 1.25rem;
+  }
+  .grid li {
+    display: flex; flex-direction: column;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    transition: transform 0.18s, box-shadow 0.18s;
+  }
+  .grid li[hidden] { display: none; }
+  .grid li:hover { transform: translateY(-3px); box-shadow: var(--shadow-card); }
+  .card-top { display: flex; align-items: baseline; justify-content: space-between; gap: 0.5rem; }
+  .f-name { font-family: var(--font-display); font-weight: 600; font-size: 1.25rem; }
+  .badge {
+    flex-shrink: 0;
+    font-size: 0.68rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em;
+    padding: 0.18rem 0.55rem; border-radius: 999px;
+  }
+  .badge.free { background: rgb(31 122 90 / 12%); color: var(--color-accent); }
+  .badge.premium { background: var(--color-surface-subtle); color: var(--color-text-muted); border: 1px solid var(--color-border); }
+  .f-foundry { color: var(--color-text-muted); font-size: 0.85rem; margin-top: 0.1rem; }
+  .tags { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.6rem; }
+  .tag {
+    font-size: 0.72rem; color: var(--color-text-muted);
+    background: var(--color-surface-subtle); border: 1px solid var(--color-border);
+    border-radius: 999px; padding: 0.1rem 0.55rem;
+  }
+  .f-desc { color: var(--color-text-muted); margin: 0.75rem 0 0; font-size: 0.92rem; }
+  .f-meta {
+    display: flex; flex-wrap: wrap; gap: 0.25rem 0.75rem;
+    color: var(--color-text-muted); font-size: 0.82rem; margin: 0.75rem 0 0;
+  }
+  .f-link { margin-top: auto; padding-top: 0.9rem; color: var(--color-accent); font-weight: 600; text-decoration: none; }
+  .f-link:hover { text-decoration: underline; }
+
+  /* install + foundries */
+  .install p { color: var(--color-text-muted); max-width: 44rem; margin: 0.75rem 0 0; }
+  .install a, .foundries a, .thanks a { color: var(--color-accent); }
+  .foundries h2 { margin-bottom: 1.25rem; }
+  .foundry-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr)); gap: 1.25rem;
+  }
+  .foundry {
+    background: var(--color-surface); border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg); padding: 1.5rem;
+  }
+  .foundry h3 { font-family: var(--font-display); font-weight: 600; font-size: 1.2rem; margin: 0 0 0.4rem; }
+  .foundry p { color: var(--color-text-muted); margin: 0 0 0.9rem; }
+  .thanks { color: var(--color-text-muted); font-size: 0.9rem; margin: 1.25rem 0 0; }
+</style>

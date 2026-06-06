@@ -1,0 +1,478 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Playground from '../components/Playground.astro';
+import DownloadButton from '../components/DownloadButton.astro';
+import { allSupporters } from '../data/sponsors';
+import { site } from '../config/site';
+import { getCollection } from 'astro:content';
+
+const features = [
+  {
+    title: 'A real input method',
+    body: 'A fast, data-driven Thaana IME for macOS — not a toggle of the built-in layout.',
+    icon: 'keyboard',
+  },
+  {
+    title: 'Your layout, your way',
+    body: 'Ship-standard layouts plus a customizer to remap any key to your hand.',
+    icon: 'sliders',
+  },
+  {
+    title: 'Beautiful Dhivehi',
+    body: 'A curated Thaana font library, installed straight from the app.',
+    icon: 'glyph',
+  },
+  {
+    title: 'Open & honest',
+    body: 'A lexicon-free engine with a clean core and documentation in the open.',
+    icon: 'open',
+  },
+];
+
+const posts = (await getCollection('news', (p) => !p.data.draft))
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
+  .slice(0, 3);
+
+const fmtDate = (d: Date) =>
+  d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+
+// Inline stroked line-icons — no icon dependency, matches the editorial tone.
+const ICONS: Record<string, string> = {
+  keyboard:
+    '<rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/>',
+  sliders:
+    '<path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/>',
+  glyph: '<path d="M4 7V4h16v3M9 20h6M12 4v16"/>',
+  open: '<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14 21 3"/>',
+};
+const icon = (name: string) =>
+  `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${ICONS[name] ?? ''}</svg>`;
+---
+
+<BaseLayout
+  title="ThariKey"
+  description="Bringing sanity to Thaana input across the board — a macOS input method, a font library, and the tooling around them."
+>
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-copy">
+      <p class="kicker">Thaana input, done right</p>
+      <h1>
+        Type Dhivehi.<br /><span class="accent">Everywhere.</span>
+      </h1>
+      <p class="lede">
+        A fast Thaana input method, a curated font library, and the tooling to keep it honest.
+        Modern engine, beautiful Dhivehi, simple to use.
+      </p>
+      <div class="cta">
+        <DownloadButton />
+        <a class="btn-ghost" href="/guides/">View setup guide</a>
+      </div>
+      <p class="platforms">macOS today — Windows &amp; Linux on the way.</p>
+      <a class="tryit" href="#playground">Try it in the browser ↓</a>
+    </div>
+
+    <!-- Specimen: the product in one glance — Latin keys → Thaana -->
+    <aside class="specimen" aria-hidden="true">
+      <div class="specimen-card">
+        <div class="keys">
+          <kbd>d</kbd><kbd>h</kbd><kbd>i</kbd><kbd>v</kbd><kbd>e</kbd><kbd>h</kbd><kbd>i</kbd>
+        </div>
+        <div class="arrow">↓</div>
+        <div class="glyph" dir="rtl" lang="dv">ދިވެހި</div>
+        <p class="specimen-label">Type in Latin. Get Thaana.</p>
+      </div>
+    </aside>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="features">
+    {features.map((f) => (
+      <article class="feature">
+        <span class="ficon" set:html={icon(f.icon)} />
+        <h3>{f.title}</h3>
+        <p>{f.body}</p>
+      </article>
+    ))}
+  </section>
+
+  <!-- PLAYGROUND -->
+  <Playground />
+
+  <!-- DOWNLOAD TEASER -->
+  <section class="download-band">
+    <div class="dl-copy">
+      <h2>Get ThariKey</h2>
+      <p>Free and open source. Install the app, enable the input method, start typing Thaana.</p>
+      <div class="cta">
+        <DownloadButton />
+        <a class="btn-ghost" href="/download/">All download options →</a>
+      </div>
+      <p class="platforms">macOS available now · Windows &amp; Linux coming.</p>
+    </div>
+    <div class="dl-art" aria-hidden="true">
+      <div class="window">
+        <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+        <div class="window-body" dir="rtl" lang="dv">ތާނަ</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- NEWS -->
+  <section class="news">
+    <header class="section-head">
+      <h2>Latest news</h2>
+      <a href="/news/">All news →</a>
+    </header>
+    <ul class="news-list">
+      {posts.map((p) => (
+        <li>
+          <a href={`/news/${p.id}/`}>
+            <time datetime={p.data.date.toISOString()}>{fmtDate(p.data.date)}</time>
+            <h3>{p.data.title}</h3>
+            <p>{p.data.summary}</p>
+            <span class="read">Read →</span>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </section>
+
+  <!-- GET INVOLVED + SPONSORS -->
+  <section class="involved">
+    <div class="involved-copy">
+      <h2>Get involved</h2>
+      <p>
+        ThariKey is open source — build on the engine, add a layout, or fix a bug.
+      </p>
+      <div class="involved-links">
+        <a class="btn-ghost" href="/developers/">For developers →</a>
+        <a class="involved-gh" href={site.github}>GitHub</a>
+      </div>
+    </div>
+    <div class="sponsors">
+      <p class="sponsors-label">Supported by</p>
+      <ul>
+        {allSupporters.map((s) => <li>{s.name}</li>)}
+      </ul>
+      <a class="sponsors-link" href="/about/#sponsors">About our sponsors →</a>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  /* ---------- HERO ---------- */
+  .hero {
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 3rem;
+    align-items: center;
+    padding: 3.5rem 0 4rem;
+    position: relative;
+  }
+  /* soft warm glow behind the hero */
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: -10% -20% auto auto;
+    width: 38rem;
+    height: 38rem;
+    background: radial-gradient(circle at 70% 30%, rgb(31 122 90 / 12%), transparent 60%);
+    z-index: -1;
+    pointer-events: none;
+  }
+  .kicker {
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--color-accent);
+    margin: 0 0 1rem;
+  }
+  .hero h1 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: clamp(2.75rem, 6vw, 4.5rem);
+    line-height: 1.02;
+    letter-spacing: -0.02em;
+    margin: 0 0 1.25rem;
+  }
+  .hero h1 .accent {
+    color: var(--color-accent);
+    font-style: italic;
+  }
+  .lede {
+    font-size: 1.2rem;
+    color: var(--color-text-muted);
+    max-width: 34rem;
+    margin: 0 0 2rem;
+  }
+  .cta {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.85rem 1.5rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    text-decoration: none;
+    font-weight: 600;
+    transition: border-color 0.18s, transform 0.18s;
+  }
+  .btn-ghost:hover {
+    border-color: var(--color-accent);
+    transform: translateY(-1px);
+  }
+  .platforms {
+    margin: 1rem 0 0;
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+  }
+  .tryit {
+    display: inline-block;
+    margin-top: 1rem;
+    color: var(--color-text-muted);
+    text-decoration: none;
+    font-weight: 500;
+  }
+  .tryit:hover { color: var(--color-accent); }
+
+  /* specimen */
+  .specimen { display: flex; justify-content: center; }
+  .specimen-card {
+    width: min(100%, 24rem);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-lift);
+    padding: 2.5rem 2rem;
+    text-align: center;
+  }
+  .keys {
+    display: flex;
+    gap: 0.4rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .keys kbd {
+    font-family: var(--font-mono);
+    font-size: 0.95rem;
+    min-width: 2rem;
+    padding: 0.5rem 0;
+    background: var(--color-surface-subtle);
+    border: 1px solid var(--color-border);
+    border-bottom-width: 3px;
+    border-radius: 0.45rem;
+    color: var(--color-text);
+  }
+  .arrow {
+    color: var(--color-accent);
+    font-size: 1.5rem;
+    margin: 1rem 0;
+    line-height: 1;
+  }
+  .glyph {
+    font-family: var(--font-thaana);
+    font-size: clamp(3rem, 8vw, 4.5rem);
+    line-height: 1.1;
+    color: var(--color-accent);
+  }
+  .specimen-label {
+    margin: 1.25rem 0 0;
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+  }
+
+  /* ---------- FEATURES ---------- */
+  .features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+    gap: 1.25rem;
+    margin: 1rem 0 4rem;
+  }
+  .feature {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    transition: transform 0.18s, box-shadow 0.18s, border-color 0.18s;
+  }
+  .feature:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-card);
+    border-color: var(--color-border);
+  }
+  .ficon {
+    display: inline-flex;
+    width: 2.5rem;
+    height: 2.5rem;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.7rem;
+    background: rgb(31 122 90 / 10%);
+    color: var(--color-accent);
+    margin-bottom: 1rem;
+  }
+  .feature h3 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.2rem;
+    margin: 0 0 0.4rem;
+  }
+  .feature p { margin: 0; color: var(--color-text-muted); }
+
+  /* ---------- DOWNLOAD BAND ---------- */
+  .download-band {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2.5rem;
+    align-items: center;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    padding: 2.5rem;
+    margin: 4rem 0;
+  }
+  .download-band h2 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.9rem;
+    margin: 0 0 0.6rem;
+  }
+  .download-band p { color: var(--color-text-muted); margin: 0 0 1.5rem; }
+  .dl-art { display: flex; justify-content: center; }
+  .window {
+    width: min(100%, 22rem);
+    aspect-ratio: 4 / 3;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lift);
+    padding: 0.85rem;
+    position: relative;
+  }
+  .window .dot {
+    display: inline-block;
+    width: 0.6rem; height: 0.6rem;
+    border-radius: 50%;
+    background: var(--color-border);
+    margin-right: 0.35rem;
+  }
+  .window-body {
+    position: absolute;
+    inset: 2.5rem 0 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-thaana);
+    font-size: clamp(3rem, 10vw, 5rem);
+    color: var(--color-accent);
+  }
+
+  /* ---------- NEWS ---------- */
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+  }
+  .section-head h2 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.9rem;
+    margin: 0;
+  }
+  .section-head a { color: var(--color-accent); text-decoration: none; font-weight: 600; }
+  .news-list {
+    list-style: none; margin: 0; padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+    gap: 1.25rem;
+  }
+  .news-list a {
+    display: block;
+    height: 100%;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    text-decoration: none;
+    transition: transform 0.18s, box-shadow 0.18s;
+  }
+  .news-list a:hover { transform: translateY(-3px); box-shadow: var(--shadow-card); }
+  .news-list time { color: var(--color-text-muted); font-size: 0.82rem; }
+  .news-list h3 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.25rem;
+    margin: 0.4rem 0 0.5rem;
+  }
+  .news-list p { color: var(--color-text-muted); margin: 0 0 0.75rem; }
+  .read { color: var(--color-accent); font-weight: 600; font-size: 0.9rem; }
+
+  /* ---------- INVOLVED + SPONSORS ---------- */
+  .involved {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2.5rem;
+    align-items: center;
+    margin: 4rem 0 2rem;
+    padding-top: 3rem;
+    border-top: 1px solid var(--color-border);
+  }
+  .involved h2 { font-family: var(--font-display); font-weight: 600; font-size: 1.7rem; margin: 0 0 0.5rem; }
+  .involved-copy p { color: var(--color-text-muted); margin: 0; }
+  .involved-links { display: flex; align-items: center; gap: 1.25rem; margin-top: 1.25rem; }
+  .involved-gh { color: var(--color-accent); font-weight: 600; text-decoration: none; }
+  .involved-gh:hover { text-decoration: underline; }
+  .sponsors-label {
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    margin: 0 0 0.75rem;
+  }
+  .sponsors ul {
+    list-style: none; margin: 0 0 1rem; padding: 0;
+    display: flex; gap: 1.5rem; flex-wrap: wrap;
+  }
+  .sponsors li { font-family: var(--font-display); font-weight: 600; font-size: 1.15rem; }
+  .sponsors-link { color: var(--color-accent); text-decoration: none; font-weight: 600; font-size: 0.9rem; }
+
+  /* ---------- MOTION ---------- */
+  .hero-copy > *,
+  .specimen-card {
+    animation: rise 0.6s both;
+  }
+  .kicker { animation-delay: 0.02s; }
+  .hero h1 { animation-delay: 0.08s; }
+  .lede { animation-delay: 0.16s; }
+  .cta { animation-delay: 0.24s; }
+  .tryit { animation-delay: 0.32s; }
+  .specimen-card { animation-delay: 0.3s; }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(14px); }
+    to { opacity: 1; transform: none; }
+  }
+
+  /* ---------- RESPONSIVE ---------- */
+  @media (max-width: 52rem) {
+    .hero,
+    .download-band,
+    .involved { grid-template-columns: 1fr; }
+    .specimen { order: -1; }
+    .download-band { text-align: center; }
+    .download-band .cta { justify-content: center; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero-copy > *,
+    .specimen-card { animation: none; }
+  }
+</style>

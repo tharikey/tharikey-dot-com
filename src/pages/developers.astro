@@ -1,0 +1,135 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHeader from '../components/PageHeader.astro';
+import { site } from '../config/site';
+
+// Landing for the top "Developers" nav. Routes people to the docs + GitHub, with a getting-involved
+// blurb and a quick map of what's open to build on.
+const pieces = [
+  {
+    title: 'The engine',
+    body: 'A lexicon-free Rust core with a hand-written C ABI, plus wasm and Python bindings.',
+    href: '/docs/engine/',
+  },
+  {
+    title: 'The macOS app & IME',
+    body: 'The InputMethodKit layer — the C ABI bridge, input models, and install lifecycle.',
+    href: '/docs/macos/',
+  },
+  {
+    title: 'The font manifest',
+    body: 'A versioned manifest foundries author against and apps consume.',
+    href: '/docs/fonts/',
+  },
+];
+---
+
+<BaseLayout
+  title="Developers"
+  description="Build on ThariKey — a lexicon-free engine, native bindings, and an open font manifest."
+>
+  <PageHeader
+    title="ThariKey for developers"
+    intro="ThariKey is open source — a lexicon-free engine, native bindings, and tooling you're welcome to build on."
+  />
+
+  <!-- Primary actions -->
+  <section class="actions">
+    <a class="action primary" href="/docs/">
+      <h2>Read the documentation</h2>
+      <p>The engine, the macOS layer, and the font manifest — all in one place.</p>
+      <span class="go">Open docs →</span>
+    </a>
+    <a class="action" href={site.github} target="_blank" rel="noopener noreferrer">
+      <h2>View on GitHub</h2>
+      <p>Browse the source, file issues, and open pull requests.</p>
+      <span class="go">github.com/tharikey →</span>
+    </a>
+  </section>
+
+  <!-- Get involved -->
+  <section class="involved">
+    <h2 class="section-title">Get involved</h2>
+    <p>
+      ThariKey is built in the open. Whether you're embedding the engine, adding a layout, authoring a
+      font, or fixing a bug — contributions are welcome. Start with the
+      <a href="/docs/">docs</a>, then open an issue or PR on <a href={site.github}>GitHub</a>.
+    </p>
+  </section>
+
+  <!-- What's open to build on -->
+  <section class="pieces">
+    <h2 class="section-title">What you can build on</h2>
+    <div class="grid">
+      {pieces.map((p) => (
+        <a class="piece" href={p.href}>
+          <h3>{p.title}</h3>
+          <p>{p.body}</p>
+        </a>
+      ))}
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  section { margin: 3rem 0; }
+  .section-title {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.5rem;
+    margin: 0 0 1.25rem;
+  }
+
+  /* primary actions */
+  .actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+  }
+  .action {
+    display: block;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    padding: 2rem;
+    text-decoration: none;
+    transition: transform 0.18s, box-shadow 0.18s, border-color 0.18s;
+  }
+  .action:hover { transform: translateY(-3px); box-shadow: var(--shadow-card); }
+  .action.primary { border-color: var(--color-accent); }
+  .action h2 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.4rem;
+    margin: 0 0 0.5rem;
+  }
+  .action p { margin: 0 0 1rem; color: var(--color-text-muted); }
+  .go { color: var(--color-accent); font-weight: 600; }
+
+  /* pieces */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+    gap: 1.25rem;
+  }
+  .piece {
+    display: block;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    text-decoration: none;
+    transition: transform 0.18s, box-shadow 0.18s;
+  }
+  .piece:hover { transform: translateY(-3px); box-shadow: var(--shadow-card); }
+  .piece h3 { font-family: var(--font-display); font-weight: 600; font-size: 1.15rem; margin: 0 0 0.4rem; }
+  .piece p { margin: 0; color: var(--color-text-muted); }
+
+  /* involved */
+  .involved p { max-width: 44rem; color: var(--color-text-muted); font-size: 1.1rem; }
+  .involved a { color: var(--color-accent); }
+
+  @media (max-width: 46rem) {
+    .actions { grid-template-columns: 1fr; }
+  }
+</style>
