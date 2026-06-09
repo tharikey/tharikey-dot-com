@@ -13,11 +13,13 @@
     "astro": "astro",
     "sync:docs": "node scripts/sync-docs.mjs",
     "fetch:release": "node scripts/fetch-release.mjs",
-    "wasm": "wasm-pack build ../tharikey-engine/bindings/wasm --dev --target web --out-dir \"$PWD/public/wasm\" --out-name tharikey",
     "ci:build": "node scripts/sync-docs.mjs && node scripts/fetch-release.mjs && astro build"
   },
   "dependencies": {
     "@astrojs/starlight": "^0.39.3",
-    "astro": "^6.4.4"
+    "@tharikey/engine": "^0.1.2",
+    "astro": "^6.4.4",
+    "vite-plugin-top-level-await": "^1.6.0",
+    "vite-plugin-wasm": "^3.6.0"
   }
 }

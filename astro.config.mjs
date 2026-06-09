@@ -1,6 +1,8 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
+import wasm from 'vite-plugin-wasm';
+import topLevelAwait from 'vite-plugin-top-level-await';
 
 // Turn ```mermaid fences into <pre class="mermaid"> (raw HTML) so they bypass the syntax highlighter
 // and mermaid.js can render them client-side. Hand-rolled walk to avoid a unist-util-visit dep.
@@ -35,6 +37,10 @@ const MERMAID_SCRIPT = `
 // https://astro.build/config
 export default defineConfig({
   site: 'https://tharikey.com',
+  // The engine ships as @tharikey/engine — wasm-pack's *bundler* target, which ESM-imports its .wasm
+  // and uses top-level await to instantiate. Vite needs both plugins to consume that (the playground
+  // dynamic-imports the package). vite-plugin-wasm must precede top-level-await.
+  vite: { plugins: [wasm(), topLevelAwait()] },
   markdown: { remarkPlugins: [remarkMermaid] },
   integrations: [
     // Docs are an isolated portal reached via the /developers landing — they use Starlight's own

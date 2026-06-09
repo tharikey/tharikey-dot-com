@@ -1,7 +1,9 @@
 ---
 // The "show don't tell" home section: type, see live Thaana, powered by the engine's wasm build.
-// The pkg is built locally from the sibling engine repo (`pnpm wasm` → public/wasm), and later from
-// a published npm package. It loads on the client and the section degrades gracefully if absent.
+// Powered by the published npm package @tharikey/engine (wasm-pack bundler target; see
+// astro.config.mjs for the vite-plugin-wasm + top-level-await setup). It's dynamic-imported on the
+// client (lazy — the wasm isn't pulled into the initial payload) and the section degrades gracefully
+// if it fails to load.
 //
 // Layout chooser = a dropdown fed by listSchemes(). Forward transforms use transliterate() (text
 // schemes) or a Session.feed() loop (keys schemes). Reversible text schemes get a direction toggle
@@ -60,12 +62,9 @@
   async function boot() {
     let mod: any;
     try {
-      // Served from /public. Import as a fully-qualified URL so Vite treats it as external (a
-      // root-relative '/wasm/...' would be pulled into Vite's module pipeline, which rejects public
-      // files). The web-target init then fetches the .wasm relative to this URL.
-      const spec = new URL('/wasm/tharikey.js', window.location.origin).href;
-      mod = await import(/* @vite-ignore */ spec);
-      await mod.default();
+      // The bundler target self-initializes on import (no init() call) — Vite handles the .wasm via
+      // vite-plugin-wasm + top-level-await. Dynamic import keeps the wasm out of the initial bundle.
+      mod = await import('@tharikey/engine');
     } catch {
       if (hint) hint.textContent = 'Engine preview coming soon — the wasm build isn’t wired in yet.';
       return;

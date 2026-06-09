@@ -1,6 +1,11 @@
 allowBuilds:
+  # @swc/core (via vite-plugin-top-level-await) ships a prebuilt platform binary — its postinstall
+  # build script isn't needed, so deny it rather than run native build code.
+  '@swc/core': false
   esbuild: true
   sharp: true
+minimumReleaseAgeExclude:
+  - '@tharikey/engine@0.1.2'
 onlyBuiltDependencies:
   - esbuild
   - sharp
